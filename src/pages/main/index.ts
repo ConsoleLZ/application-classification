@@ -4,11 +4,13 @@ import ModalAddTabComp from "./comps/modal-add-tab/index.vue";
 import { Empty, message, Modal, Select } from "ant-design-vue";
 import { onMounted, onUnmounted } from "vue";
 import type { SelectValue } from 'ant-design-vue/es/select';
+import draggable from 'vuedraggable'
 
 export default defineComponent({
   components: {
     ModalAddApplicationComp,
     ModalAddTabComp,
+    draggable
   },
   setup() {
     const state = reactive({
@@ -289,6 +291,10 @@ export default defineComponent({
             return methods.onRenameTab(selectedTab, newTabName.trim());
           },
         });
+      },
+      onDragChange() {
+        // 保存拖拽后的新顺序到 localStorage
+        localStorage.setItem("tabs-data", JSON.stringify(state.listData));
       },
     };
 
