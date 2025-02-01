@@ -12,6 +12,7 @@ dist
 release
 dist-ssr
 dist-electron
+userData
 *.local
 
 # Editor directories and files

@@ -37,6 +37,12 @@ declare global {
   }
 }
 
+// 在创建窗口之前设置用户数据目录
+if (VITE_DEV_SERVER_URL) {
+  const userDataPath = path.join(process.env.APP_ROOT!, 'userData');
+  app.setPath('userData', userDataPath);
+}
+
 function createWindow() {
   // 创建自定义菜单
   const template: MenuItemConstructorOptions[] = [
