@@ -46,25 +46,48 @@ export default defineComponent({
       },
       // 修改确认保存方法
       onConfirm(data: any, isEdit: boolean, editIndex: number) {
+        // 检查是否存在相同路径的应用
+        const isDuplicate = state.listData.some((tab: any) => 
+          tab.data.some((app: any) => 
+            app.path === data.path && (!isEdit || app !== tab.data[editIndex])
+          )
+        );
+
+        if (!isEdit && isDuplicate) {
+          message.error('该应用已存在，不能重复添加');
+          return;
+        }
+
         if (isEdit) {
           // 编辑模式
-          const oldTab = state.listData.find((item: any) => 
-            item.data.some((app: any) => app.path === data.path)
-          );
+          // 1. 找到包含当前应用的分类和应用索引
+          let currentTabIndex = -1;
+          let appIndex = -1;
           
-          if (oldTab?.title === data.tab) {
-            // 如果分类没有改变，直接更新数据
-            oldTab.data[editIndex] = data;
-          } else {
-            // 如果分类改变了
-            // 1. 从旧分类中删除
-            if (oldTab) {
-              oldTab.data.splice(editIndex, 1);
+          state.listData.forEach((tab: any, tIndex: number) => {
+            const aIndex = tab.data.findIndex((app: any) => app.path === data.path);
+            if (aIndex !== -1) {
+              currentTabIndex = tIndex;
+              appIndex = aIndex;
             }
-            // 2. 添加到新分类
-            const newTab = state.listData.find((item: any) => item.title === data.tab);
-            if (newTab) {
-              newTab.data.push(data);
+          });
+
+          if (currentTabIndex !== -1 && appIndex !== -1) {
+            const currentTab = state.listData[currentTabIndex];
+            
+            if (currentTab.title === data.tab) {
+              // 如果分类没有改变，直接更新数据
+              currentTab.data[appIndex] = data;
+            } else {
+              // 如果分类改变了
+              // 1. 从旧分类中删除
+              currentTab.data.splice(appIndex, 1);
+              
+              // 2. 添加到新分类
+              const newTab = state.listData.find((item: any) => item.title === data.tab);
+              if (newTab) {
+                newTab.data.push(data);
+              }
             }
           }
         } else {
