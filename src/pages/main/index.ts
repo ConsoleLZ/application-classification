@@ -112,8 +112,11 @@ export default defineComponent({
             message.warning("暂无数据可导出");
             return;
           }
-          await window.ipcRenderer.exportConfig(data);
-          message.success("导出成功");
+          const result = await window.ipcRenderer.exportConfig(data);
+          // 只有当实际保存了文件才显示成功提示
+          if (result === true) {
+            message.success("导出成功");
+          }
         } catch (error) {
           console.error("导出失败:", error);
           message.error("导出失败");

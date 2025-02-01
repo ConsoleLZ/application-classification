@@ -1,5 +1,5 @@
 <template>
-  <div style="padding: 20px">
+  <div style="padding: 0 10px">
     <a-tabs v-if="listData?.length">
       <a-tab-pane
         v-for="(tabItem, index) in listData"

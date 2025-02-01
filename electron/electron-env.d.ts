@@ -34,7 +34,7 @@ interface Window {
       filePath: string
       icon: string
     } | null>
-    exportConfig(data: string): Promise<void>
+    exportConfig(data: string): Promise<boolean>
     importConfig(): Promise<string | null>
     getAppVersion(): Promise<string>
     extractIcon(exePath: string, outputPath: string): Promise<string>
