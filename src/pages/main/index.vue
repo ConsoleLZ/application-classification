@@ -1,15 +1,5 @@
 <template>
   <div style="padding: 20px">
-    <div class="header-actions">
-      <a-space>
-        <a-button type="primary" @click="onShowAddTab"
-          >添加一个分类标签</a-button
-        >
-        <a-button @click="exportData">导出配置</a-button>
-        <a-button @click="importData">导入配置</a-button>
-        <a-button @click="clearData">清除配置</a-button>
-      </a-space>
-    </div>
     <a-tabs v-if="listData?.length">
       <a-tab-pane
         v-for="(tabItem, index) in listData"

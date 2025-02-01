@@ -2,6 +2,7 @@ import { defineComponent, reactive, ref, toRefs } from "vue";
 import ModalAddApplicationComp from "./comps/modal-add-application/index.vue";
 import ModalAddTabComp from "./comps/modal-add-tab/index.vue";
 import { Empty, message, Modal } from "ant-design-vue";
+import { onMounted, onUnmounted } from "vue";
 
 export default defineComponent({
   components: {
@@ -162,6 +163,31 @@ export default defineComponent({
         });
       },
     };
+
+    // 添加菜单事件监听
+    onMounted(() => {
+      window.ipcRenderer.on('show-add-tab', methods.onShowAddTab);
+      window.ipcRenderer.on('menu-export', methods.exportData);
+      window.ipcRenderer.on('menu-import', methods.importData);
+      window.ipcRenderer.on('menu-clear', () => {
+        Modal.confirm({
+          title: '确认清除',
+          content: '确定要清除所有配置吗？此操作不可恢复！',
+          okText: '确定',
+          cancelText: '取消',
+          onOk: methods.clearData
+        });
+      });
+    });
+
+    // 添加事件清理
+    onUnmounted(() => {
+      window.ipcRenderer.off('show-add-tab', methods.onShowAddTab);
+      window.ipcRenderer.off('menu-export', methods.exportData);
+      window.ipcRenderer.off('menu-import', methods.importData);
+      window.ipcRenderer.off('menu-clear', methods.clearData);
+    });
+
     return {
       ...toRefs(state),
       ...methods,

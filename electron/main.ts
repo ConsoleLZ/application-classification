@@ -31,12 +31,42 @@ function createWindow() {
   // 创建自定义菜单
   const template = [
     {
+      label: "操作",
+      submenu: [
+        {
+          label: "添加分类",
+          click: () => {
+            win?.webContents.send("show-add-tab");
+          },
+        },
+        { type: 'separator' },
+        {
+          label: "导出配置",
+          click: () => {
+            win?.webContents.send("menu-export");
+          },
+        },
+        {
+          label: "导入配置",
+          click: () => {
+            win?.webContents.send("menu-import");
+          },
+        },
+        { type: 'separator' },
+        {
+          label: "清除配置",
+          click: () => {
+            win?.webContents.send("menu-clear");
+          },
+        },
+      ],
+    },
+    {
       label: "帮助",
       submenu: [
         {
           label: "关于",
           click: () => {
-            // 发送消息到渲染进程显示关于对话框
             win?.webContents.send("show-about");
           },
         },
@@ -45,7 +75,7 @@ function createWindow() {
   ];
 
   // 设置应用菜单
-  const menu = Menu.buildFromTemplate(template);
+  const menu = Menu.buildFromTemplate(template as any);
   Menu.setApplicationMenu(menu);
 
   const primaryDisplay = screen.getPrimaryDisplay();
