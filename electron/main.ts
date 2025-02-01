@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Menu } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, Menu, screen } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { execFile, exec } from "child_process";
@@ -48,10 +48,12 @@ function createWindow() {
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "favicon.ico"),
-    width: 1200,
-    height: 900,
+    width,
+    height,
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
     },
