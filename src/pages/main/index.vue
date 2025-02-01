@@ -35,7 +35,7 @@
                 <a-button
                   type="link"
                   size="small"
-                  @click="onEdit(tabItem.title, index, item)"
+                  @click="onEdit(index, item)"
                 >
                   编辑
                 </a-button>

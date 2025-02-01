@@ -41,7 +41,7 @@ export default defineComponent({
         components.modalAddApplicationRef.value!.open();
       },
       // 编辑应用
-      onEdit(tabTitle: string, index: number, item: any) {
+      onEdit(index: number, item: any) {
         components.modalAddApplicationRef.value?.open(true, item, index);
       },
       // 修改确认保存方法
