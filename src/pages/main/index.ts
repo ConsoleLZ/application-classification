@@ -40,15 +40,33 @@ export default defineComponent({
       onShow() {
         components.modalAddApplicationRef.value!.open();
       },
-      // 确认保存
-      onConfirm(data: any) {
-        state.listData.forEach((item: any) => {
-          if (item.title === data.tab) {
-            item.data.push(data);
-          }
-        });
+      // 编辑应用
+      onEdit(tabTitle: string, index: number, item: any) {
+        components.modalAddApplicationRef.value?.open(true, item, index);
+      },
+      // 修改确认保存方法
+      onConfirm(data: any, isEdit: boolean, editIndex: number) {
+        if (isEdit) {
+          // 编辑模式
+          state.listData.forEach((item: any) => {
+            if (item.title === data.tab) {
+              if (item.data[editIndex]) {
+                // 更新现有数据
+                Object.assign(item.data[editIndex], data);
+              }
+            }
+          });
+        } else {
+          // 添加模式
+          state.listData.forEach((item: any) => {
+            if (item.title === data.tab) {
+              item.data.push(data);
+            }
+          });
+        }
         // 保存到 localStorage
         localStorage.setItem("tabs-data", JSON.stringify(state.listData));
+        message.success(isEdit ? '编辑成功' : '添加成功');
       },
       // 导出配置
       async exportData() {

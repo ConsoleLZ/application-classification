@@ -9,6 +9,8 @@ export default defineComponent({
 
     const state = reactive({
       visible: false,
+      isEdit: false,
+      editIndex: -1,
       formState: {
         name: "",
         path: "",
@@ -21,9 +23,12 @@ export default defineComponent({
     });
 
     const methods = {
-      open() {
+      open(isEdit = false, data?: any, index?: number) {
         resetFields();
         state.visible = true;
+        state.isEdit = isEdit;
+        state.editIndex = index ?? -1;
+
         const tabsData = localStorage.getItem("tabs-data")
           ? JSON.parse(localStorage.getItem("tabs-data")!)
           : [];
@@ -33,6 +38,11 @@ export default defineComponent({
             label: item.title,
           };
         });
+
+        if (isEdit && data) {
+          // 填充编辑数据
+          Object.assign(state.formState, data);
+        }
       },
       async selectExe() {
         try {
@@ -85,10 +95,9 @@ export default defineComponent({
             icon: state.formState.icon || "./exe.png",
           };
 
-          emit("confirm", copyData);
+          emit("confirm", copyData, state.isEdit, state.editIndex);
           state.visible = false;
         } catch (error) {
-          // 校验失败时不关闭弹窗
           console.error("表单校验失败:", error);
         }
       },

@@ -1,10 +1,16 @@
 <template>
-  <a-modal v-model:open="visible" title="添加应用" cancelText="取消" okText="确认" @ok="onConfirm">
+  <a-modal 
+    v-model:open="visible" 
+    :title="isEdit ? '编辑应用' : '添加应用'" 
+    cancelText="取消" 
+    okText="确认" 
+    @ok="onConfirm"
+  >
     <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 15 }">
       <a-form-item label="应用程序">
         <a-space>
           <a-input v-model:value="formState.path" placeholder="请选择应用程序" readonly></a-input>
-          <a-button type="primary" @click="selectExe">选择</a-button>
+          <a-button type="primary" @click="selectExe" :disabled="isEdit">选择</a-button>
         </a-space>
       </a-form-item>
       <a-form-item label="应用图标">

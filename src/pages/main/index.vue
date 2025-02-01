@@ -2,7 +2,9 @@
   <div style="padding: 20px">
     <div class="header-actions">
       <a-space>
-        <a-button type="primary" @click="onShowAddTab">添加一个分类标签</a-button>
+        <a-button type="primary" @click="onShowAddTab"
+          >添加一个分类标签</a-button
+        >
         <a-button @click="exportData">导出配置</a-button>
         <a-button @click="importData">导入配置</a-button>
         <a-button @click="clearData">清除配置</a-button>
@@ -14,12 +16,14 @@
         :key="index"
         :tab="tabItem.title"
       >
-        <a-list v-if="tabItem.data?.length" item-layout="horizontal" :data-source="tabItem.data">
+        <a-list
+          v-if="tabItem.data?.length"
+          item-layout="horizontal"
+          :data-source="tabItem.data"
+        >
           <template #renderItem="{ item, index }">
             <a-list-item>
-              <a-list-item-meta
-                :description="`路径：${item.path}`"
-              >
+              <a-list-item-meta :description="`路径：${item.path}`">
                 <template #title>
                   <a @click="onOpen(item.path)">{{ item.name }}</a>
                 </template>
@@ -28,9 +32,16 @@
                 </template>
               </a-list-item-meta>
               <template #actions>
-                <a-button 
-                  type="link" 
-                  danger 
+                <a-button
+                  type="link"
+                  size="small"
+                  @click="onEdit(tabItem.title, index, item)"
+                >
+                  编辑
+                </a-button>
+                <a-button
+                  type="link"
+                  danger
                   size="small"
                   @click="onDelete(tabItem.title, index)"
                 >
@@ -40,13 +51,20 @@
             </a-list-item>
           </template>
         </a-list>
-        <a-empty v-else :image="simpleImage" description="暂无应用，请点击右下方按钮进行添加" />
+        <a-empty
+          v-else
+          :image="simpleImage"
+          description="暂无应用，请点击右下方按钮进行添加"
+        />
       </a-tab-pane>
     </a-tabs>
   </div>
   <a-avatar @click="onShow" class="add-btn" :size="36" src="./add.png" />
 
-  <modal-add-application-comp ref="modalAddApplicationRef" @confirm="onConfirm" />
+  <modal-add-application-comp
+    ref="modalAddApplicationRef"
+    @confirm="onConfirm"
+  />
   <modal-add-tab-comp ref="modalAddTabRef" @confirm="onConfirmTab" />
 </template>
 
