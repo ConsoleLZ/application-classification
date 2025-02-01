@@ -1,10 +1,5 @@
 <template>
   <div style="padding: 0 10px">
-    <div class="header-actions">
-      <a-button type="primary" @click="onShowSortTabs" v-if="listData?.length">
-        排序分类
-      </a-button>
-    </div>
     <a-tabs>
       <a-tab-pane
         v-for="element in listData"
@@ -67,7 +62,4 @@
 
 <script lang="ts" src="./index.ts"></script>
 <style src="./index.css" scoped>
-.header-actions {
-  margin-bottom: 16px;
-}
 </style>

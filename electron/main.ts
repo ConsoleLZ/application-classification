@@ -67,6 +67,12 @@ function createWindow() {
             win?.webContents.send("show-delete-tab");
           },
         },
+        {
+          label: "排序分类",
+          click: () => {
+            win?.webContents.send("show-sort-tabs");
+          },
+        },
         { type: 'separator' },
         {
           label: "导出配置",
