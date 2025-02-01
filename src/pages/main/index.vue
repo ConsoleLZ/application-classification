@@ -1,61 +1,60 @@
 <template>
-  <draggable v-if="listData?.length" 
-    v-model="listData"
-    item-key="title"
-    @change="onDragChange"
-  >
-    <template #item="{element}">
-      <div style="padding: 0 10px">
-        <a-tabs>
-          <a-tab-pane
-            :key="element.title"
-            :tab="element.title"
-          >
-            <a-list
-              v-if="element.data?.length"
-              item-layout="horizontal"
-              :data-source="element.data"
-            >
-              <template #renderItem="{ item, index }">
-                <a-list-item>
-                  <a-list-item-meta :description="`路径：${item.path}`">
-                    <template #title>
-                      <a @click="onOpen(item.path)">{{ item.name }}</a>
-                    </template>
-                    <template #avatar>
-                      <a-avatar :src="item.icon" :size="32" shape="square" />
-                    </template>
-                  </a-list-item-meta>
-                  <template #actions>
-                    <a-button
-                      type="link"
-                      size="small"
-                      @click="onEdit(index, item)"
-                    >
-                      编辑
-                    </a-button>
-                    <a-button
-                      type="link"
-                      danger
-                      size="small"
-                      @click="onDelete(element.title, index)"
-                    >
-                      删除
-                    </a-button>
-                  </template>
-                </a-list-item>
+  <div style="padding: 0 10px">
+    <div class="header-actions">
+      <a-button type="primary" @click="onShowSortTabs" v-if="listData?.length">
+        排序分类
+      </a-button>
+    </div>
+    <a-tabs>
+      <a-tab-pane
+        v-for="element in listData"
+        :key="element.title"
+        :tab="element.title"
+      >
+        <a-list
+          v-if="element.data?.length"
+          item-layout="horizontal"
+          :data-source="element.data"
+        >
+          <template #renderItem="{ item, index }">
+            <a-list-item>
+              <a-list-item-meta :description="`路径：${item.path}`">
+                <template #title>
+                  <a @click="onOpen(item.path)">{{ item.name }}</a>
+                </template>
+                <template #avatar>
+                  <a-avatar :src="item.icon" :size="32" shape="square" />
+                </template>
+              </a-list-item-meta>
+              <template #actions>
+                <a-button
+                  type="link"
+                  size="small"
+                  @click="onEdit(index, item)"
+                >
+                  编辑
+                </a-button>
+                <a-button
+                  type="link"
+                  danger
+                  size="small"
+                  @click="onDelete(element.title, index)"
+                >
+                  删除
+                </a-button>
               </template>
-            </a-list>
-            <a-empty
-              v-else
-              :image="simpleImage"
-              description="暂无应用，请点击右下方按钮进行添加"
-            />
-          </a-tab-pane>
-        </a-tabs>
-      </div>
-    </template>
-  </draggable>
+            </a-list-item>
+          </template>
+        </a-list>
+        <a-empty
+          v-else
+          :image="simpleImage"
+          description="暂无应用，请点击右下方按钮进行添加"
+        />
+      </a-tab-pane>
+    </a-tabs>
+  </div>
+
   <a-avatar @click="onShow" class="add-btn" :size="36" src="./add.png" />
 
   <modal-add-application-comp
@@ -63,6 +62,7 @@
     @confirm="onConfirm"
   />
   <modal-add-tab-comp ref="modalAddTabRef" @confirm="onConfirmTab" />
+  <modal-sort-tabs-comp ref="modalSortTabsRef" @confirm="onSortConfirm" />
 </template>
 
 <script lang="ts" src="./index.ts"></script>

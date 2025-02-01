@@ -1,6 +1,7 @@
 import { defineComponent, reactive, ref, toRefs, h } from "vue";
 import ModalAddApplicationComp from "./comps/modal-add-application/index.vue";
 import ModalAddTabComp from "./comps/modal-add-tab/index.vue";
+import ModalSortTabsComp from './comps/modal-sort-tabs/index.vue';
 import { Empty, message, Modal, Select } from "ant-design-vue";
 import { onMounted, onUnmounted } from "vue";
 import type { SelectValue } from 'ant-design-vue/es/select';
@@ -10,7 +11,8 @@ export default defineComponent({
   components: {
     ModalAddApplicationComp,
     ModalAddTabComp,
-    draggable
+    draggable,
+    ModalSortTabsComp,
   },
   setup() {
     const state = reactive({
@@ -25,6 +27,7 @@ export default defineComponent({
         typeof ModalAddApplicationComp
       > | null>(null),
       modalAddTabRef: ref<InstanceType<typeof ModalAddTabComp> | null>(null),
+      modalSortTabsRef: ref<InstanceType<typeof ModalSortTabsComp> | null>(null),
     };
 
     const methods = {
@@ -296,6 +299,14 @@ export default defineComponent({
         // 保存拖拽后的新顺序到 localStorage
         localStorage.setItem("tabs-data", JSON.stringify(state.listData));
       },
+      onShowSortTabs() {
+        components.modalSortTabsRef.value?.open(state.listData);
+      },
+      onSortConfirm(newTabs: any[]) {
+        state.listData = newTabs;
+        localStorage.setItem("tabs-data", JSON.stringify(newTabs));
+        message.success('排序成功');
+      },
     };
 
     // 添加菜单事件监听
@@ -314,6 +325,7 @@ export default defineComponent({
       });
       window.ipcRenderer.on('show-delete-tab', methods.showDeleteTab);
       window.ipcRenderer.on('show-rename-tab', methods.showRenameTab);
+      window.ipcRenderer.on('show-sort-tabs', methods.onShowSortTabs);
     });
 
     // 清理事件监听
@@ -324,6 +336,7 @@ export default defineComponent({
       window.ipcRenderer.off('menu-clear', methods.clearData);
       window.ipcRenderer.off('show-delete-tab', methods.showDeleteTab);
       window.ipcRenderer.off('show-rename-tab', methods.showRenameTab);
+      window.ipcRenderer.off('show-sort-tabs', methods.onShowSortTabs);
     });
 
     return {
