@@ -42,6 +42,9 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   // 提取应用的图标
   extractIcon(exePath: string, outputPath: string) {
     return ipcRenderer.invoke('extract-icon', exePath, outputPath)
+  },
+  deleteTab(tabTitle: string) {
+    return ipcRenderer.invoke('delete-tab', tabTitle)
   }
   // You can expose other APTs you need here.
   // ...

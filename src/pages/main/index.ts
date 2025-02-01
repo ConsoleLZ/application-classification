@@ -1,8 +1,9 @@
-import { defineComponent, reactive, ref, toRefs } from "vue";
+import { defineComponent, reactive, ref, toRefs, h } from "vue";
 import ModalAddApplicationComp from "./comps/modal-add-application/index.vue";
 import ModalAddTabComp from "./comps/modal-add-tab/index.vue";
-import { Empty, message, Modal } from "ant-design-vue";
+import { Empty, message, Modal, Select } from "ant-design-vue";
 import { onMounted, onUnmounted } from "vue";
+import type { SelectValue } from 'ant-design-vue/es/select';
 
 export default defineComponent({
   components: {
@@ -165,6 +166,60 @@ export default defineComponent({
           },
         });
       },
+      // 删除分类标签
+      onDeleteTab(tabTitle: string) {
+        Modal.confirm({
+          title: "确认删除",
+          content: "删除分类将同时删除该分类下的所有应用，确定要删除吗？",
+          okText: "确定",
+          cancelText: "取消",
+          onOk() {
+            // 找到并删除对应的标签
+            const index = state.listData.findIndex((item: any) => item.title === tabTitle);
+            if (index !== -1) {
+              state.listData.splice(index, 1);
+              // 更新本地存储
+              localStorage.setItem("tabs-data", JSON.stringify(state.listData));
+              message.success("删除成功");
+            }
+          },
+        });
+      },
+      // 显示删除分类对话框
+      showDeleteTab() {
+        if (!state.listData.length) {
+          message.warning("暂无分类可删除");
+          return;
+        }
+
+        const options = state.listData.map((item: any) => ({
+          label: item.title,
+          value: item.title,
+        }));
+
+        let selectedTab = '';
+
+        Modal.confirm({
+          title: "删除分类",
+          content: h(Select, {
+            style: { width: '100%' },
+            placeholder: "请选择要删除的分类",
+            onChange: (value: SelectValue) => {
+              selectedTab = value as string;
+            },
+            options: options
+          }),
+          okText: "确定",
+          cancelText: "取消",
+          onOk() {
+            if (!selectedTab) {
+              message.warning("请先选择要删除的分类");
+              return Promise.reject();
+            }
+            return methods.onDeleteTab(selectedTab);
+          },
+        });
+      },
     };
 
     // 添加菜单事件监听
@@ -181,14 +236,16 @@ export default defineComponent({
           onOk: methods.clearData
         });
       });
+      window.ipcRenderer.on('show-delete-tab', methods.showDeleteTab);
     });
 
-    // 添加事件清理
+    // 清理事件监听
     onUnmounted(() => {
       window.ipcRenderer.off('show-add-tab', methods.onShowAddTab);
       window.ipcRenderer.off('menu-export', methods.exportData);
       window.ipcRenderer.off('menu-import', methods.importData);
       window.ipcRenderer.off('menu-clear', methods.clearData);
+      window.ipcRenderer.off('show-delete-tab', methods.showDeleteTab);
     });
 
     return {

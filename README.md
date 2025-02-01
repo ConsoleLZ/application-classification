@@ -2,4 +2,4 @@
 
 如果你需要整理一下windows桌面，做一个分类管理，推荐你使用这个项目
 
-打包好的文件：https://pan.quark.cn/s/1164eb480f3b
+打包好的文件：https://pan.quark.cn/s/9cca3e05750c
