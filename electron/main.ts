@@ -56,6 +56,12 @@ function createWindow() {
           },
         },
         {
+          label: "修改分类",
+          click: () => {
+            win?.webContents.send("show-rename-tab");
+          },
+        },
+        {
           label: "删除分类",
           click: () => {
             win?.webContents.send("show-delete-tab");

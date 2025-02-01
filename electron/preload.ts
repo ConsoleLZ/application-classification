@@ -45,6 +45,9 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   },
   deleteTab(tabTitle: string) {
     return ipcRenderer.invoke('delete-tab', tabTitle)
+  },
+  renameTab(oldTitle: string, newTitle: string) {
+    return ipcRenderer.invoke('rename-tab', oldTitle, newTitle)
   }
   // You can expose other APTs you need here.
   // ...

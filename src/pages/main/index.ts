@@ -220,6 +220,76 @@ export default defineComponent({
           },
         });
       },
+      // 修改分类标签名称
+      onRenameTab(oldTitle: string, newTitle: string) {
+        // 检查新名称是否已存在
+        if (state.listData.some((item: any) => item.title === newTitle)) {
+          message.error('该分类名称已存在');
+          return Promise.reject();
+        }
+
+        // 找到并修改对应的标签名称
+        const tab = state.listData.find((item: any) => item.title === oldTitle);
+        if (tab) {
+          tab.title = newTitle;
+          // 更新本地存储
+          localStorage.setItem("tabs-data", JSON.stringify(state.listData));
+          message.success("修改成功");
+          return Promise.resolve();
+        }
+        return Promise.reject();
+      },
+      // 显示修改分类对话框
+      showRenameTab() {
+        if (!state.listData.length) {
+          message.warning("暂无分类可修改");
+          return;
+        }
+
+        const options = state.listData.map((item: any) => ({
+          label: item.title,
+          value: item.title,
+        }));
+
+        let selectedTab = '';
+        let newTabName = '';
+
+        Modal.confirm({
+          title: "修改分类名称",
+          content: h('div', {}, [
+            h(Select, {
+              style: { width: '100%', marginBottom: '16px' },
+              placeholder: "请选择要修改的分类",
+              onChange: (value: SelectValue) => {
+                selectedTab = value as string;
+              },
+              options: options
+            }),
+            h('input', {
+              type: 'text',
+              placeholder: '请输入新的分类名称',
+              class: 'ant-input',
+              onInput: (e: Event) => {
+                const target = e.target as HTMLInputElement;
+                newTabName = target.value;
+              }
+            })
+          ]),
+          okText: "确定",
+          cancelText: "取消",
+          onOk() {
+            if (!selectedTab) {
+              message.warning("请先选择要修改的分类");
+              return Promise.reject();
+            }
+            if (!newTabName.trim()) {
+              message.warning("请输入新的分类名称");
+              return Promise.reject();
+            }
+            return methods.onRenameTab(selectedTab, newTabName.trim());
+          },
+        });
+      },
     };
 
     // 添加菜单事件监听
@@ -237,6 +307,7 @@ export default defineComponent({
         });
       });
       window.ipcRenderer.on('show-delete-tab', methods.showDeleteTab);
+      window.ipcRenderer.on('show-rename-tab', methods.showRenameTab);
     });
 
     // 清理事件监听
@@ -246,6 +317,7 @@ export default defineComponent({
       window.ipcRenderer.off('menu-import', methods.importData);
       window.ipcRenderer.off('menu-clear', methods.clearData);
       window.ipcRenderer.off('show-delete-tab', methods.showDeleteTab);
+      window.ipcRenderer.off('show-rename-tab', methods.showRenameTab);
     });
 
     return {
