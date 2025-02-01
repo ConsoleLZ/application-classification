@@ -48,14 +48,25 @@ export default defineComponent({
       onConfirm(data: any, isEdit: boolean, editIndex: number) {
         if (isEdit) {
           // 编辑模式
-          state.listData.forEach((item: any) => {
-            if (item.title === data.tab) {
-              if (item.data[editIndex]) {
-                // 更新现有数据
-                Object.assign(item.data[editIndex], data);
-              }
+          const oldTab = state.listData.find((item: any) => 
+            item.data.some((app: any) => app.path === data.path)
+          );
+          
+          if (oldTab?.title === data.tab) {
+            // 如果分类没有改变，直接更新数据
+            oldTab.data[editIndex] = data;
+          } else {
+            // 如果分类改变了
+            // 1. 从旧分类中删除
+            if (oldTab) {
+              oldTab.data.splice(editIndex, 1);
             }
-          });
+            // 2. 添加到新分类
+            const newTab = state.listData.find((item: any) => item.title === data.tab);
+            if (newTab) {
+              newTab.data.push(data);
+            }
+          }
         } else {
           // 添加模式
           state.listData.forEach((item: any) => {
@@ -64,6 +75,7 @@ export default defineComponent({
             }
           });
         }
+        
         // 保存到 localStorage
         localStorage.setItem("tabs-data", JSON.stringify(state.listData));
         message.success(isEdit ? '编辑成功' : '添加成功');
