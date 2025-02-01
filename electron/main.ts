@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Menu, screen } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, Menu, screen, Tray, MenuItemConstructorOptions } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { execFile, exec } from "child_process";
@@ -26,10 +26,20 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null;
+let tray: Tray | null = null;  // 添加托盘变量
+
+// 在文件顶部添加类型声明
+declare global {
+  namespace Electron {
+    interface App {
+      isQuitting?: boolean;
+    }
+  }
+}
 
 function createWindow() {
   // 创建自定义菜单
-  const template = [
+  const template: MenuItemConstructorOptions[] = [
     {
       label: "操作",
       submenu: [
@@ -80,8 +90,21 @@ function createWindow() {
     },
   ];
 
+  // 在开发环境中添加调试菜单
+  if (VITE_DEV_SERVER_URL) {
+    template.push({
+      label: '调试',
+      submenu: [
+        { role: 'toggleDevTools' as const, label: '切换开发者工具' },
+        { type: 'separator' as const },
+        { role: 'reload' as const, label: '刷新' },
+        { role: 'forceReload' as const, label: '强制刷新' },
+      ]
+    });
+  }
+
   // 设置应用菜单
-  const menu = Menu.buildFromTemplate(template as any);
+  const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -92,12 +115,23 @@ function createWindow() {
     height,
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
+      // 开发环境下启用开发者工具
+      devTools: !!VITE_DEV_SERVER_URL,
     },
   });
 
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", new Date().toLocaleString());
+  });
+
+  // 添加窗口关闭事件处理
+  win.on('close', (event) => {
+    if (!app.isQuitting) {
+      event.preventDefault();
+      win?.hide();
+    }
+    return false;
   });
 
   if (VITE_DEV_SERVER_URL) {
@@ -280,13 +314,45 @@ ipcMain.handle("extract-icon", async (_event, exePath: string, outputPath: strin
   });
 });
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+// 创建系统托盘
+function createTray() {
+  tray = new Tray(path.join(process.env.VITE_PUBLIC, "favicon.ico"));
+  
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '显示主窗口',
+      click: () => {
+        win?.show();
+      }
+    },
+    {
+      label: '退出',
+      click: () => {
+        app.isQuitting = true;
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setToolTip('应用分类管理器');
+  tray.setContextMenu(contextMenu);
+
+  // 点击托盘图标显示主窗口
+  tray.on('click', () => {
+    win?.show();
+  });
+}
+
+// 修改应用退出处理
+app.on('before-quit', () => {
+  app.isQuitting = true;
+});
+
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
     win = null;
+    tray = null;
   }
 });
 
@@ -298,4 +364,7 @@ app.on("activate", () => {
   }
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  createTray();
+});
