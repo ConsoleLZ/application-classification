@@ -19,6 +19,10 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     return ipcRenderer.invoke(channel, ...omit)
   },
   executeExe(exePath: string){
+    // 确保路径存在
+    if (!exePath) {
+      return Promise.reject(new Error('无效的程序路径'));
+    }
     return ipcRenderer.invoke('execute-exe', exePath)
   },
   selectExe() {

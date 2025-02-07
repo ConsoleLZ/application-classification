@@ -162,22 +162,43 @@ function createWindow() {
 // IPC handler for executing exe files
 ipcMain.handle("execute-exe", async (_event, exePath) => {
   return new Promise((resolve, reject) => {
-    execFile(exePath, (error: any, stdout: any, stderr: any) => {
-      if (error) {
-        console.error(`执行出错: ${error.message}`);
-        reject(error);
-        return;
-      }
+    const workingDirectory = path.dirname(exePath);
+    
+    const options = {
+      cwd: workingDirectory,
+      windowsHide: false,
+      // 添加以下选项来提升权限
+      shell: true,
+      windowsVerbatimArguments: true
+    };
 
-      if (stderr) {
-        console.error(`stderr: ${stderr}`);
-        reject(new Error(stderr));
-        return;
-      }
+    try {
+      // 使用 exec 替代 execFile，因为它对权限处理更友好
+      exec(`"${exePath}"`, options, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`执行出错: ${error.message}`);
+          // 检查是否是权限问题
+          if (error.message.includes('EACCES')) {
+            reject(new Error('没有足够的权限执行此程序，请尝试以管理员身份运行'));
+          } else {
+            reject(error);
+          }
+          return;
+        }
 
-      console.log(`stdout: ${stdout}`);
-      resolve({ stdout });
-    });
+        if (stderr) {
+          console.error(`stderr: ${stderr}`);
+          reject(new Error(stderr));
+          return;
+        }
+
+        console.log(`stdout: ${stdout}`);
+        resolve({ stdout });
+      });
+    } catch (err) {
+      console.error('执行程序时发生错误:', err);
+      reject(err);
+    }
   });
 });
 
