@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu, screen, Tray, MenuItemConstructorOptions } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { execFile, exec } from "child_process";
+import { exec } from "child_process";
 import fs from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -167,14 +167,13 @@ ipcMain.handle("execute-exe", async (_event, exePath) => {
     const options = {
       cwd: workingDirectory,
       windowsHide: false,
-      // 添加以下选项来提升权限
-      shell: true,
-      windowsVerbatimArguments: true
+      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',  // 明确指定 shell
+      windowsVerbatimArguments: true,
+      encoding: 'utf8' as const  // 明确指定编码
     };
 
     try {
-      // 使用 exec 替代 execFile，因为它对权限处理更友好
-      exec(`"${exePath}"`, options, (error, stdout, stderr) => {
+      exec(`"${exePath}"`, options, (error: Error | null, stdout: string, stderr: string) => {
         if (error) {
           console.error(`执行出错: ${error.message}`);
           // 检查是否是权限问题
