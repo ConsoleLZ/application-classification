@@ -5,7 +5,7 @@
         position: 'sticky',
         top: 0,
         backgroundColor: 'white',
-        zIndex: 9999,
+        zIndex: 1,
         padding: '0 10px',
       }"
     >
