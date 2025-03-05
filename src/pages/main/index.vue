@@ -1,6 +1,14 @@
 <template>
-  <div style="padding: 0 10px">
-    <a-tabs>
+  <div>
+    <a-tabs
+      :tabBarStyle="{
+        position: 'sticky',
+        top: 0,
+        backgroundColor: 'white',
+        zIndex: 9999,
+        padding: '0 10px',
+      }"
+    >
       <a-tab-pane
         v-for="element in listData"
         :key="element.title"
@@ -22,11 +30,7 @@
                 </template>
               </a-list-item-meta>
               <template #actions>
-                <a-button
-                  type="link"
-                  size="small"
-                  @click="onEdit(index, item)"
-                >
+                <a-button type="link" size="small" @click="onEdit(index, item)">
                   编辑
                 </a-button>
                 <a-button
@@ -61,5 +65,4 @@
 </template>
 
 <script lang="ts" src="./index.ts"></script>
-<style src="./index.css" scoped>
-</style>
+<style src="./index.css" scoped></style>
