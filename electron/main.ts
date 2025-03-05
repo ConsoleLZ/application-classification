@@ -1,4 +1,13 @@
-import { app, BrowserWindow, ipcMain, dialog, Menu, screen, Tray, MenuItemConstructorOptions } from "electron";
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  Menu,
+  screen,
+  Tray,
+  MenuItemConstructorOptions,
+} from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { exec } from "child_process";
@@ -26,7 +35,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null;
-let tray: Tray | null = null;  // 添加托盘变量
+let tray: Tray | null = null; // 添加托盘变量
 
 // 在文件顶部添加类型声明
 declare global {
@@ -39,8 +48,8 @@ declare global {
 
 // 在创建窗口之前设置用户数据目录
 if (VITE_DEV_SERVER_URL) {
-  const userDataPath = path.join(process.env.APP_ROOT!, 'userData');
-  app.setPath('userData', userDataPath);
+  const userDataPath = path.join(process.env.APP_ROOT!, "userData");
+  app.setPath("userData", userDataPath);
 }
 
 function createWindow() {
@@ -73,7 +82,7 @@ function createWindow() {
             win?.webContents.send("show-sort-tabs");
           },
         },
-        { type: 'separator' },
+        { type: "separator" },
         {
           label: "导出配置",
           click: () => {
@@ -86,7 +95,7 @@ function createWindow() {
             win?.webContents.send("menu-import");
           },
         },
-        { type: 'separator' },
+        { type: "separator" },
         {
           label: "清除配置",
           click: () => {
@@ -111,13 +120,13 @@ function createWindow() {
   // 在开发环境中添加调试菜单
   if (VITE_DEV_SERVER_URL) {
     template.push({
-      label: '调试',
+      label: "调试",
       submenu: [
-        { role: 'toggleDevTools' as const, label: '切换开发者工具' },
-        { type: 'separator' as const },
-        { role: 'reload' as const, label: '刷新' },
-        { role: 'forceReload' as const, label: '强制刷新' },
-      ]
+        { role: "toggleDevTools" as const, label: "切换开发者工具" },
+        { type: "separator" as const },
+        { role: "reload" as const, label: "刷新" },
+        { role: "forceReload" as const, label: "强制刷新" },
+      ],
     });
   }
 
@@ -144,7 +153,7 @@ function createWindow() {
   });
 
   // 添加窗口关闭事件处理
-  win.on('close', (event) => {
+  win.on("close", (event) => {
     if (!app.isQuitting) {
       event.preventDefault();
       win?.hide();
@@ -163,39 +172,45 @@ function createWindow() {
 ipcMain.handle("execute-exe", async (_event, exePath) => {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.dirname(exePath);
-    
+
     const options = {
       cwd: workingDirectory,
       windowsHide: false,
-      shell: process.platform === 'win32' ? 'cmd.exe' : '/bin/sh',  // 明确指定 shell
+      shell: process.platform === "win32" ? "cmd.exe" : "/bin/sh", // 明确指定 shell
       windowsVerbatimArguments: true,
-      encoding: 'utf8' as const  // 明确指定编码
+      encoding: "utf8" as const, // 明确指定编码
     };
 
     try {
-      exec(`"${exePath}"`, options, (error: Error | null, stdout: string, stderr: string) => {
-        if (error) {
-          console.error(`执行出错: ${error.message}`);
-          // 检查是否是权限问题
-          if (error.message.includes('EACCES')) {
-            reject(new Error('没有足够的权限执行此程序，请尝试以管理员身份运行'));
-          } else {
-            reject(error);
+      exec(
+        `"${exePath}"`,
+        options,
+        (error: Error | null, stdout: string, stderr: string) => {
+          if (error) {
+            console.error(`执行出错: ${error.message}`);
+            // 检查是否是权限问题
+            if (error.message.includes("EACCES")) {
+              reject(
+                new Error("没有足够的权限执行此程序，请尝试以管理员身份运行")
+              );
+            } else {
+              reject(error);
+            }
+            return;
           }
-          return;
-        }
 
-        if (stderr) {
-          console.error(`stderr: ${stderr}`);
-          reject(new Error(stderr));
-          return;
-        }
+          if (stderr) {
+            console.error(`stderr: ${stderr}`);
+            reject(new Error(stderr));
+            return;
+          }
 
-        console.log(`stdout: ${stdout}`);
-        resolve({ stdout });
-      });
+          console.log(`stdout: ${stdout}`);
+          resolve({ stdout });
+        }
+      );
     } catch (err) {
-      console.error('执行程序时发生错误:', err);
+      console.error("执行程序时发生错误:", err);
       reject(err);
     }
   });
@@ -301,10 +316,10 @@ ipcMain.handle("get-app-version", async () => {
 function getIconStoragePath() {
   if (VITE_DEV_SERVER_URL) {
     // 开发环境
-    return path.join(process.env.APP_ROOT!, 'public', 'ico');
+    return path.join(process.env.APP_ROOT!, "public", "ico");
   } else {
     // 生产环境
-    return path.join(app.getPath('userData'), 'ico');
+    return path.join(app.getPath("userData"), "ico");
   }
 }
 
@@ -317,72 +332,95 @@ function ensureIconDir() {
   return iconDir;
 }
 
-// 修改提取图标的处理器
-ipcMain.handle("extract-icon", async (_event, exePath: string, outputPath: string): Promise<string> => {
-  const iconDir = ensureIconDir();
-  const iconFileName = path.basename(outputPath);
-  const iconPath = path.join(iconDir, iconFileName);
+ipcMain.handle(
+  "extract-icon",
+  async (_event, exePath: string, outputPath: string): Promise<string> => {
+    const iconDir = ensureIconDir();
+    const iconFileName = path.basename(outputPath);
+    const iconPath = path.join(iconDir, iconFileName);
 
-  return new Promise((resolve, reject) => {
-    const escapedExePath = exePath.replace(/'/g, "''");
-    const escapedOutputPath = iconPath.replace(/'/g, "''");
+    return new Promise((resolve, reject) => {
+      const escapedExePath = exePath.replace(/'/g, "''");
+      const escapedOutputPath = iconPath.replace(/'/g, "''");
 
-    const psScript = `
+      const psScript = `
       Add-Type -AssemblyName System.Drawing
       $exePath = '${escapedExePath}'
       $outputPath = '${escapedOutputPath}'
+      
+      # 提取图标
       $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($exePath)
-      $stream = [System.IO.File]::Create($outputPath)
-      $icon.Save($stream)
-      $stream.Close()
+      
+      # 创建目录（如果不存在）
+      if (-not (Test-Path -Path (Split-Path $outputPath))) {
+        New-Item -ItemType Directory -Path (Split-Path $outputPath) -Force
+      }
+      
+      # 保存图标为PNG格式以保留颜色
+      $bitmap = new-object System.Drawing.Bitmap $icon.Width, $icon.Height
+      $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+      $graphics.DrawIcon($icon, 0, 0)
+      $bitmap.Save($outputPath, [System.Drawing.Imaging.ImageFormat]::Png)
+      $graphics.Dispose()
+      $bitmap.Dispose()
+      $icon.Dispose()
     `;
 
-    const encodedScript = Buffer.from(psScript, 'utf16le').toString('base64');
+      const encodedScript = Buffer.from(psScript, "utf16le").toString("base64");
 
-    exec(`powershell -EncodedCommand ${encodedScript}`, { windowsHide: true }, (error) => {
-      if (error) {
-        reject(new Error(`图标提取失败: ${error.message}`));
-        return;
-      }
-      // 返回图标的 base64 数据
-      const iconBuffer = fs.readFileSync(iconPath);
-      const base64Icon = `data:image/x-icon;base64,${iconBuffer.toString('base64')}`;
-      resolve(base64Icon);
+      exec(
+        `powershell -EncodedCommand ${encodedScript}`,
+        { windowsHide: true },
+        (error) => {
+          if (error) {
+            console.error("图标提取失败:", error.message);
+            reject(new Error(`图标提取失败: ${error.message}`));
+            return;
+          }
+
+          // 返回图标的 base64 数据
+          const iconBuffer = fs.readFileSync(iconPath);
+          const base64Icon = `data:image/png;base64,${iconBuffer.toString(
+            "base64"
+          )}`;
+          resolve(base64Icon);
+        }
+      );
     });
-  });
-});
+  }
+);
 
 // 创建系统托盘
 function createTray() {
   tray = new Tray(path.join(process.env.VITE_PUBLIC, "favicon.ico"));
-  
+
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: '显示主窗口',
+      label: "显示主窗口",
       click: () => {
         win?.show();
-      }
+      },
     },
     {
-      label: '退出',
+      label: "退出",
       click: () => {
         app.isQuitting = true;
         app.quit();
-      }
-    }
+      },
+    },
   ]);
 
-  tray.setToolTip('应用分类管理器');
+  tray.setToolTip("应用分类管理器");
   tray.setContextMenu(contextMenu);
 
   // 点击托盘图标显示主窗口
-  tray.on('click', () => {
+  tray.on("click", () => {
     win?.show();
   });
 }
 
 // 修改应用退出处理
-app.on('before-quit', () => {
+app.on("before-quit", () => {
   app.isQuitting = true;
 });
 
