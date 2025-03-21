@@ -8,7 +8,6 @@ import {
   Tray,
   MenuItemConstructorOptions,
 } from "electron";
-// import { is } from "electron-util";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { exec } from "child_process";
@@ -16,15 +15,6 @@ import fs from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// The built directory structure
-//
-// ├─┬─┬ dist
-// │ │ └── index.html
-// │ │
-// │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.mjs
-// │
 process.env.APP_ROOT = path.join(__dirname, "..");
 
 export const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -36,9 +26,8 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null;
-let tray: Tray | null = null; // 添加托盘变量
+let tray: Tray | null = null;
 
-// 在文件顶部添加类型声明
 declare global {
   namespace Electron {
     interface App {
@@ -47,14 +36,12 @@ declare global {
   }
 }
 
-// 在创建窗口之前设置用户数据目录
 if (VITE_DEV_SERVER_URL) {
   const userDataPath = path.join(process.env.APP_ROOT!, "userData");
   app.setPath("userData", userDataPath);
 }
 
 function createWindow() {
-  // 创建自定义菜单
   const template: MenuItemConstructorOptions[] = [
     {
       label: "操作",
@@ -118,7 +105,6 @@ function createWindow() {
     },
   ];
 
-  // 在开发环境中添加调试菜单
   if (VITE_DEV_SERVER_URL) {
     template.push({
       label: "调试",
@@ -131,7 +117,6 @@ function createWindow() {
     });
   }
 
-  // 设置应用菜单
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 
@@ -143,17 +128,14 @@ function createWindow() {
     height,
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
-      // 开发环境下启用开发者工具
       devTools: !!VITE_DEV_SERVER_URL,
     },
   });
 
-  // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", new Date().toLocaleString());
   });
 
-  // 添加窗口关闭事件处理
   win.on("close", (event) => {
     if (!app.isQuitting) {
       event.preventDefault();
@@ -169,7 +151,30 @@ function createWindow() {
   }
 }
 
-// IPC handler for executing exe files
+// 单实例检查
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    // 当运行第二个实例时
+    if (win) {
+      if (win.isMinimized()) {
+        win.restore();
+      }
+      win.show();
+      win.focus();
+    }
+  });
+
+  app.whenReady().then(() => {
+    createWindow();
+    createTray();
+  });
+}
+
+// IPC handlers
 ipcMain.handle("execute-exe", async (_event, exePath) => {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.dirname(exePath);
@@ -177,9 +182,9 @@ ipcMain.handle("execute-exe", async (_event, exePath) => {
     const options = {
       cwd: workingDirectory,
       windowsHide: false,
-      shell: process.platform === "win32" ? "cmd.exe" : "/bin/sh", // 明确指定 shell
+      shell: process.platform === "win32" ? "cmd.exe" : "/bin/sh",
       windowsVerbatimArguments: true,
-      encoding: "utf8" as const, // 明确指定编码
+      encoding: "utf8" as const,
     };
 
     try {
@@ -189,7 +194,6 @@ ipcMain.handle("execute-exe", async (_event, exePath) => {
         (error: Error | null, stdout: string, stderr: string) => {
           if (error) {
             console.error(`执行出错: ${error.message}`);
-            // 检查是否是权限问题
             if (error.message.includes("EACCES")) {
               reject(
                 new Error("没有足够的权限执行此程序，请尝试以管理员身份运行")
@@ -217,7 +221,6 @@ ipcMain.handle("execute-exe", async (_event, exePath) => {
   });
 });
 
-// 添加文件选择处理器
 ipcMain.handle("select-exe", async () => {
   const result = await dialog.showOpenDialog({
     properties: ["openFile"],
@@ -259,7 +262,6 @@ ipcMain.handle("select-icon", async () => {
   return null;
 });
 
-// 导出配置
 ipcMain.handle("export-config", async (_event, data) => {
   const result = await dialog.showSaveDialog({
     filters: [
@@ -281,7 +283,6 @@ ipcMain.handle("export-config", async (_event, data) => {
   return false;
 });
 
-// 导入配置
 ipcMain.handle("import-config", async () => {
   const result = await dialog.showOpenDialog({
     properties: ["openFile"],
@@ -294,7 +295,6 @@ ipcMain.handle("import-config", async () => {
   if (!result.canceled && result.filePaths.length > 0) {
     try {
       const data = fs.readFileSync(result.filePaths[0], "utf-8");
-      // 验证 JSON 格式
       JSON.parse(data);
       return data;
     } catch (error) {
@@ -305,7 +305,6 @@ ipcMain.handle("import-config", async () => {
   return null;
 });
 
-// 添加版本获取处理器
 ipcMain.handle("get-app-version", async () => {
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(process.env.APP_ROOT, "package.json"), "utf-8")
@@ -313,18 +312,14 @@ ipcMain.handle("get-app-version", async () => {
   return packageJson.version;
 });
 
-// 添加图标存储路径获取函数
 function getIconStoragePath() {
   if (VITE_DEV_SERVER_URL) {
-    // 开发环境
     return path.join(process.env.APP_ROOT!, "public", "ico");
   } else {
-    // 生产环境
     return path.join(app.getPath("userData"), "ico");
   }
 }
 
-// 确保图标存储目录存在
 function ensureIconDir() {
   const iconDir = getIconStoragePath();
   if (!fs.existsSync(iconDir)) {
@@ -379,7 +374,6 @@ ipcMain.handle(
             return;
           }
 
-          // 返回图标的 base64 数据
           const iconBuffer = fs.readFileSync(iconPath);
           const base64Icon = `data:image/png;base64,${iconBuffer.toString(
             "base64"
@@ -391,7 +385,6 @@ ipcMain.handle(
   }
 );
 
-// 创建系统托盘
 function createTray() {
   tray = new Tray(path.join(process.env.VITE_PUBLIC, "favicon.ico"));
 
@@ -414,13 +407,11 @@ function createTray() {
   tray.setToolTip("应用分类管理器");
   tray.setContextMenu(contextMenu);
 
-  // 点击托盘图标显示主窗口
   tray.on("click", () => {
     win?.show();
   });
 }
 
-// 修改应用退出处理
 app.on("before-quit", () => {
   app.isQuitting = true;
 });
@@ -434,31 +425,7 @@ app.on("window-all-closed", () => {
 });
 
 app.on("activate", () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
-
-// 单实例检查
-const gotTheLock = app.requestSingleInstanceLock();
-
-if (!gotTheLock) {
-  // 如果已经有实例运行，直接退出
-  app.quit();
-} else {
-  // 处理第二个实例启动
-  app.on('second-instance', () => {
-    // 当运行第二个实例时，聚焦到已有窗口
-    if (win) {
-      if (win.isMinimized()) win.restore();
-      win.focus();
-    }
-  });
-
-  app.whenReady().then(() => {
-    createWindow();
-    createTray();
-  });
-}
