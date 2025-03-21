@@ -8,6 +8,7 @@ import {
   Tray,
   MenuItemConstructorOptions,
 } from "electron";
+// import { is } from "electron-util";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { exec } from "child_process";
@@ -440,7 +441,24 @@ app.on("activate", () => {
   }
 });
 
-app.whenReady().then(() => {
-  createWindow();
-  createTray();
-});
+// 单实例检查
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  // 如果已经有实例运行，直接退出
+  app.quit();
+} else {
+  // 处理第二个实例启动
+  app.on('second-instance', () => {
+    // 当运行第二个实例时，聚焦到已有窗口
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.focus();
+    }
+  });
+
+  app.whenReady().then(() => {
+    createWindow();
+    createTray();
+  });
+}

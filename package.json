@@ -1,7 +1,7 @@
 {
   "name": "easy",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "ant-design-vue": "^4.2.6",
+    "electron-util": "^0.18.1",
     "vue": "^3.4.21",
     "vue-router": "^4.5.0",
     "vuedraggable": "^4.1.0"
