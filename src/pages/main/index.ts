@@ -3,6 +3,7 @@ import ModalAddApplicationComp from "./comps/modal-add-application/index.vue";
 import ModalAddTabComp from "./comps/modal-add-tab/index.vue";
 import ModalSortTabsComp from './comps/modal-sort-tabs/index.vue';
 import { Empty, message, Modal, Select } from "ant-design-vue";
+import { HolderOutlined } from '@ant-design/icons-vue';
 import { onMounted, onUnmounted } from "vue";
 import type { SelectValue } from 'ant-design-vue/es/select';
 import draggable from 'vuedraggable'
@@ -13,6 +14,7 @@ export default defineComponent({
     ModalAddTabComp,
     draggable,
     ModalSortTabsComp,
+    HolderOutlined,
   },
   setup() {
     const state = reactive({
@@ -306,6 +308,11 @@ export default defineComponent({
         state.listData = newTabs;
         localStorage.setItem("tabs-data", JSON.stringify(newTabs));
         message.success('排序成功');
+      },
+      // 拖拽结束后保存数据
+      onDragEnd() {
+        localStorage.setItem("tabs-data", JSON.stringify(state.listData));
+        message.success("排序已保存");
       },
     };
 
